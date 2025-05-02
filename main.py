@@ -27,7 +27,7 @@ def test_api_field_values():
     for url, expected_fields in TEST_CASES:
         data = fetch_json(url)
         for key, (expected_value, _) in expected_fields.items():
-            if expected_value is not None:  # Skip value check if None (wildcard)
+            if expected_value is not None:  # Skip value check if None
                 actual_value = data.get(key)
                 assert actual_value == expected_value, (
                     f"[{url}] Value mismatch on '{key}': "
