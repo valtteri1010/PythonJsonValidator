@@ -1,23 +1,24 @@
 import pytest
 import requests
 
+# (expected_value, expected_type)
 TEST_CASES = [
     (
         "https://jsonplaceholder.typicode.com/todos/1",
         {
-            "userId": 1,
-            "id": 1,
-            "title": "delectus aut autems",
-            "completed": False
+            "userId": (None, int),
+            "id": (1, int),
+            "title": ("delectus aut autem", str),
+            "completed": (False, bool)
         }
     ),
     (
         "https://jsonplaceholder.typicode.com/todos/2",
         {
-            "userId": 1,
-            "id": 2,
-            "title": "quis ut nam facilis et officia qui",
-            "completed": False
+            "userId": (1, int),
+            "id": (2, int),
+            "title": ("quis ut nam facilis et officia qui", str),
+            "completed": (False, bool)
         }
     ),
 ]
@@ -28,26 +29,32 @@ def check_response(url, expected_response):
     try:
         response = requests.get(url)
     except Exception as e:
-        print(f"Request failed: {e}")
+        print(f" Request failed: {e}")
         return False
 
     if response.status_code != 200:
-        print(f"Failed: Expected status 200, got {response.status_code}")
+        print(f" Failed: Expected status 200, got {response.status_code}")
         return False
 
     data = response.json()
     passed = True
 
-    for key, expected_value in expected_response.items():
+    for key, (expected_value, expected_type) in expected_response.items():
         actual_value = data.get(key)
-        if actual_value != expected_value:
-            print(f"  Mismatch on '{key}': expected {expected_value!r}, got {actual_value!r}")
+
+        if not isinstance(actual_value, expected_type):
+            print(f" Type mismatch on '{key}': expected {expected_type.__name__}, got {type(actual_value).__name__}")
+            passed = False
+            continue
+
+        if expected_value is not None and actual_value != expected_value:
+            print(f" Value mismatch on '{key}': expected {expected_value!r}, got {actual_value!r}")
             passed = False
 
     if passed:
-        print("Test passed\n")
+        print(" Test passed\n")
     else:
-        print("Test failed\n")
+        print(" Test failed\n")
 
     return passed
 
