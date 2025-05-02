@@ -1,33 +1,34 @@
 import pytest
 import requests
+from jsonschema import validate, ValidationError
+
 from testCases import TEST_CASES
+
 
 def fetch_json(url):
     try:
         response = requests.get(url)
+        response.raise_for_status()
     except Exception as e:
         pytest.fail(f"Request to {url} failed: {e}")
-    if response.status_code != 200:
-        pytest.fail(f"Expected status 200, got {response.status_code} from {url}")
     return response.json()
 
 
-def test_api_field_types():
-    for url, expected_fields in TEST_CASES:
+def test_api_schema_validation():
+    for url, case in TEST_CASES:
         data = fetch_json(url)
-        for key, (_, expected_type) in expected_fields.items():
-            actual_value = data.get(key)
-            assert isinstance(actual_value, expected_type), (
-                f"[{url}] Type mismatch on '{key}': "
-                f"expected {expected_type.__name__}, got {type(actual_value).__name__}"
-            )
+        schema = case["schema"]
+        try:
+            validate(instance=data, schema=schema)
+        except ValidationError as e:
+            pytest.fail(f"[{url}] Schema validation error: {e.message}")
 
 
 def test_api_field_values():
-    for url, expected_fields in TEST_CASES:
+    for url, case in TEST_CASES:
         data = fetch_json(url)
-        for key, (expected_value, _) in expected_fields.items():
-            if expected_value is not None:  # Skip value check if None
+        for key, expected_value in case["expected_values"].items():
+            if expected_value is not None:
                 actual_value = data.get(key)
                 assert actual_value == expected_value, (
                     f"[{url}] Value mismatch on '{key}': "
