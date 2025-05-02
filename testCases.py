@@ -42,4 +42,25 @@ TEST_CASES = [
             }
         }
     ),
+(
+        "https://jsonplaceholder.typicode.com/todos/3",
+        {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "userId": {"type": "integer"},
+                    "id": {"type": "integer"},
+                    "title": {"type": "string"},
+                    "completed": {"type": "boolean"}
+                },
+                "required": ["userId", "id", "title", "completed"]
+            },
+            "expected_values": {
+                "userId": 1,
+                "id": 3,
+                "title": "fugiat veniam minus",
+                "completed": False
+            }
+        }
+    ),
 ]
