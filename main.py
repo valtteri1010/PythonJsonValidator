@@ -2,64 +2,34 @@ import pytest
 import requests
 from testCases import TEST_CASES
 
-
-
-def check_response(url, expected_response):
-    print(f"Testing URL: {url}")
+def fetch_json(url):
     try:
         response = requests.get(url)
     except Exception as e:
-        print(f" Request failed: {e}")
-        return False
-
+        pytest.fail(f"Request to {url} failed: {e}")
     if response.status_code != 200:
-        print(f" Failed: Expected status 200, got {response.status_code}")
-        return False
-
-    data = response.json()
-    passed = True
-
-    for key, (expected_value, expected_type) in expected_response.items():
-        actual_value = data.get(key)
-
-        if not isinstance(actual_value, expected_type):
-            print(f" Type mismatch on '{key}': expected {expected_type.__name__}, got {type(actual_value).__name__}")
-            passed = False
-            continue
-
-        if expected_value is not None and actual_value != expected_value:
-            print(f" Value mismatch on '{key}': expected {expected_value!r}, got {actual_value!r}")
-            passed = False
-
-    if passed:
-        print(" Test passed\n")
-    else:
-        print(" Test failed\n")
-
-    return passed
+        pytest.fail(f"Expected status 200, got {response.status_code} from {url}")
+    return response.json()
 
 
-def test_api_responses():
-    failures = []
-
-    for url, expected_response in TEST_CASES:
-        passed = check_response(url, expected_response)
-        if not passed:
-            failures.append(url)
-
-    if failures:
-        failed_list = "\n".join(f" - {url}" for url in failures)
-        pytest.fail(f"The following tests failed:\n{failed_list}")
+def test_api_field_types():
+    for url, expected_fields in TEST_CASES:
+        data = fetch_json(url)
+        for key, (_, expected_type) in expected_fields.items():
+            actual_value = data.get(key)
+            assert isinstance(actual_value, expected_type), (
+                f"[{url}] Type mismatch on '{key}': "
+                f"expected {expected_type.__name__}, got {type(actual_value).__name__}"
+            )
 
 
-def main():
-    all_passed = True
-    for url, expected_response in TEST_CASES:
-        if not check_response(url, expected_response):
-            all_passed = False
-    if not all_passed:
-        exit(1)
-
-
-if __name__ == "__main__":
-    main()
+def test_api_field_values():
+    for url, expected_fields in TEST_CASES:
+        data = fetch_json(url)
+        for key, (expected_value, _) in expected_fields.items():
+            if expected_value is not None:  # Skip value check if None (wildcard)
+                actual_value = data.get(key)
+                assert actual_value == expected_value, (
+                    f"[{url}] Value mismatch on '{key}': "
+                    f"expected {expected_value!r}, got {actual_value!r}"
+                )
