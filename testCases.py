@@ -62,4 +62,25 @@ TEST_CASES = [
             }
         }
     ),
+(
+        "https://jsonplaceholder.typicode.com/todos/4",
+        {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "userId": {"type": "integer"},
+                    "id": {"type": "integer"},
+                    "title": {"type": "string"},
+                    "completed": {"type": "boolean"}
+                },
+                "required": ["userId", "id", "title", "completed"]
+            },
+            "expected_values": {
+                "userId": 1,
+                "id": 4,
+                "title": "et porro tempora",
+                "completed": True
+            }
+        }
+    ),
 ]

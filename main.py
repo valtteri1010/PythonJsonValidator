@@ -29,9 +29,14 @@ def test_api_field_values(url, case):
     data, error = fetch_json(url)
     assert not error, f"[{url}] Fetch error: {error}"
 
+    mismatches = []
     for key, expected_value in case["expected_values"].items():
         if expected_value is not None:
             actual_value = data.get(key)
-            assert actual_value == expected_value, (
-                f"[{url}] Value mismatch on '{key}': expected {expected_value!r}, got {actual_value!r}"
-            )
+            if actual_value != expected_value:
+                mismatches.append(
+                    f"[{url}] Value mismatch on '{key}': expected {expected_value!r}, got {actual_value!r}"
+                )
+
+    if mismatches:
+        pytest.fail("\n".join(mismatches))
